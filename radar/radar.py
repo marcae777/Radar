@@ -387,7 +387,7 @@ class radar_process:
 		'----------\n'\
 		'FD_plana=Fractal_Dimension_Plain(tam).\n'\
 
-		if radar_f90.dxp<>0.0:
+		if radar_f90.dxp != 0.0:
 			return np.log(self.cant_elem)/np.log(radar_f90.dxp)
 		else:
 			print ('Error: radar.dxp=0.0')
@@ -474,7 +474,7 @@ class radar_process:
 		conv=np.copy(self.fractal)
 		strat[strat>0]=1; strat[np.isnan(strat)]=0
 		conv[np.isfinite(conv)]=0; conv[np.isnan(conv)]=1
-		if umbral<>None:
+		if umbral != None:
 			conv[self.ref>umbral]=1
 		#conv=self.image.dilation(conv,kernel=kernel)
 		conv=nd.binary_fill_holes(conv); conv=conv*2
@@ -543,14 +543,13 @@ class radar_process:
                 #Establece tamano de las variables
 		DimNcol = gr.createDimension('ncols',self.ConvStra.shape[0])
 		DimNfil = gr.createDimension('nrows',self.ConvStra.shape[1])
-                #variables del arrayVar
-                if type(ArrayVar1) is dict:
-                    k = ArrayVar1.keys()[0]
-                    DimArray = gr.createDimension('narray1',ArrayVar1[k]['Data'].size)
-                if type(ArrayVar2) is dict:
-                    k = ArrayVar2.keys()[0]
-                    DimArray = gr.createDimension('narray2',ArrayVar2[k]['Data'].size)
-		#Crea variables
+        #variables del arrayVar
+		if type(ArrayVar1) is dict:
+			k = ArrayVar1.keys()[0]
+			DimArray = gr.createDimension('narray1',ArrayVar1[k]['Data'].size)
+		if type(ArrayVar2) is dict:
+			k = ArrayVar2.keys()[0]
+			DimArray = gr.createDimension('narray2',ArrayVar2[k]['Data'].size)
 		ClasStruct = gr.createVariable('Conv_Strat','i4',('ncols','nrows'),zlib=True)
 		ClasRain = gr.createVariable('Rain', 'i4', ('ncols','nrows'),zlib=True)
 		ClasRainHigh = gr.createVariable('Rhigh', 'i4', ('ncols','nrows'),zlib=True)
@@ -564,26 +563,25 @@ class radar_process:
 		#Lluvia alta
 		ppt = np.copy(self.ppt['alta']) * 1000
 		ppt = ppt.astype(float)
-                ClasRainHigh[:] = ppt
+		ClasRainHigh[:] = ppt
 		#Lluvia baja
 		ppt = np.copy(self.ppt['baja']) * 1000
 		ppt = ppt.astype(float)
-                ClasRainLow[:] = ppt
+		ClasRainLow[:] = ppt
 		#Extra veriables
-                if type(ExtraVar) is dict:
-                    for k in ExtraVar.keys():
-                        Var = gr.createVariable(k,ExtraVar[k]['type'],('ncols','nrows'),zlib=True)
-			Var[:] = ExtraVar[k]['Data']
-                #ArrayVar
-                if type(ArrayVar1) is dict:
-                    for k in ArrayVar1.keys():
-                        var = gr.createVariable(k,ArrayVar1[k]['type'],('narray1',),zlib=True)
-                        var[:] = ArrayVar1[k]['Data']
-                if type(ArrayVar2) is dict:
-                    for k in ArrayVar2.keys():
-                        var = gr.createVariable(k,ArrayVar2[k]['type'],('narray2',),zlib=True)
-                        var[:] = ArrayVar2[k]['Data']
-                #Cierra el archivo
+		if type(ExtraVar) is dict:
+			for k in ExtraVar.keys():
+				Var = gr.createVariable(k,ExtraVar[k]['type'],('ncols','nrows'),zlib=True)
+		Var[:] = ExtraVar[k]['Data']
+		if type(ArrayVar1) is dict:
+			for k in ArrayVar1.keys():
+				var = gr.createVariable(k,ArrayVar1[k]['type'],('narray1',),zlib=True)
+				var[:] = ArrayVar1[k]['Data']
+		if type(ArrayVar2) is dict:
+			for k in ArrayVar2.keys():
+				var = gr.createVariable(k,ArrayVar2[k]['type'],('narray2',),zlib=True)
+				var[:] = ArrayVar2[k]['Data']
+        #Cierra el archivo
 		gr.setncatts(Dict)
 		gr.close()
 
@@ -657,7 +655,7 @@ class draw_func:
 		'\n'\
 		'Retornos\n'\
 		'----------\n'\
-		'Plotea la figura y si ruta <> None, la guarda.\n'\
+		'Plotea la figura y si ruta != None, la guarda.\n'\
 		'\n'\
 		'Ejemplo\n'\
 		'----------\n'\
@@ -669,7 +667,7 @@ class draw_func:
 		X,Y=np.meshgrid(longs,lats)
 		Y=Y[::-1]
 		#Cambia el tamano de la figura si tiene que hacerlo
-		if figsize<>None:
+		if figsize != None:
 			fig=pl.figure(figsize=figsize)
 		#Genera el lugar de ploteo con el Basemap
 		m = Basemap(projection='merc',
@@ -693,7 +691,7 @@ class draw_func:
 			yoffset=0.1,
 			linewidth=0.1)
 		#Cambia zeros por nana
-		if mask_value<>None:
+		if mask_value != None:
 			imageIn=np.ma.array(imageIn,mask=imageIn==mask_value)
 		#Genera el mapa
 		demX,demY=m(X,Y)
@@ -707,15 +705,15 @@ class draw_func:
 			x,y = self.draw_circle(m,-75.5276,6.1937,i,c='k',lw=0.5)
 			XY.append([x,y])
 		#Si hay coordenadas de algo las dibuja
-		if xy<>None:
+		if xy != None:
 			xc,yc=m(xy[0],xy[1])
 			m.plot(xc,yc,color=xyColor,
 				#s=30,
 				linewidth=1,)
 				#edgecolor='black')
-		if texto<>None:
+		if texto != None:
 			pl.annotate(texto, xy=(0.1, 0.9), xycoords='axes fraction', size=16)
-		if ruta<>None:
+		if ruta != None:
 			pl.savefig(ruta,bbox_inches='tight')
 		pl.show()
 		#return XY
