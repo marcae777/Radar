@@ -4,11 +4,11 @@ import glob
 try:
 	from mpl_toolkits.basemap import Basemap, addcyclic, shiftgrid, cm
 except:
-	print 'se desactivan funciones de ploteo con Basemap'
+	print ('se desactivan funciones de ploteo con Basemap')
 	pass
 import pylab as pl
 import scipy.ndimage as nd
-from netCDF4 import Dataset  
+from netCDF4 import Dataset
 import pickle
 
 Path = __file__
@@ -45,7 +45,7 @@ class image_process:
 		'Ejemplo\n'\
 		'----------\n'\
 		'eroded=erosion(binImage,5,3).\n'\
-		
+
 		return radar_f90.erosion(binaria,kernel,N,radar_f90.ncols,radar_f90.nrows)
 	#Dilata la imagen
 	def dilation(self,binaria,kernel=3,N=1):
@@ -68,9 +68,9 @@ class image_process:
 		'Ejemplo\n'\
 		'----------\n'\
 		'dilated=dilation(binImage,5,3).\n'\
-		
+
 		return radar_f90.dilation(binaria,kernel,N,radar_f90.ncols,radar_f90.nrows)
-	#Abre la imagen	
+	#Abre la imagen
 	def opening(self,binaria,kernel=3):
 		'\n'\
 		'Descripcion: Abre la imagen en terminos de procesamiento\n'\
@@ -89,7 +89,7 @@ class image_process:
 		'Ejemplo\n'\
 		'----------\n'\
 		'open=openning(binImage,5).\n'\
-		
+
 		return self.erosion(self.dilation(binaria,kernel))
 	#cierra la imagen
 	def closing(self,imageIn,kernel=3):
@@ -110,7 +110,7 @@ class image_process:
 		'Ejemplo\n'\
 		'----------\n'\
 		'closed=closing(binImage,5).\n'\
-		
+
 		return self.dilation(self.erosion(imageIn,kernel))
 	#Obtiene bordes de la imagen
 	def borders(self,imageIn):
@@ -129,10 +129,10 @@ class image_process:
 		'Ejemplo\n'\
 		'----------\n'\
 		'border=borders(binImage).\n'\
-		
+
 		return imageIn-self.erosion(imageIn)
 
-class radar_process:	
+class radar_process:
 	#------------------------------------------------------
 	# Subrutinas de lectura y prerpocesamiento inicial
 	#------------------------------------------------------
@@ -149,15 +149,15 @@ class radar_process:
 		'Retornos\n'\
 		'----------\n'\
 		'self : Con las variables iniciadas.\n'\
-		
-		#Inicia el objeto 
+
+		#Inicia el objeto
 		self.Z=None
 		self.ref=None
 		self.binario=None
 		self.borders=None
 		self.objetos=None
 		self.image=image_process()
-		self.plot=draw_func()					
+		self.plot=draw_func()
 		#Inicia las propiedades para fortran
 		radar_f90.yll =  4.9
 		radar_f90.xll = -76.82
@@ -166,11 +166,11 @@ class radar_process:
 		radar_f90.nodata = -999
 		radar_f90.ncols = 1728
 		radar_f90.nrows=1728
-		
+
 		#si se pasan argumentos se cambia
 		for key, value in kwargs.iteritems():      # styles is a regular dictionary
 			setattr(radar_f90, key, value)
-		
+
 		#Copia las propiedades en la lista de propiedades variable
 		if len(RadProp) == 0:
 			RadProp.extend([radar_f90.ncols,
@@ -179,9 +179,9 @@ class radar_process:
 				radar_f90.yll,
 				radar_f90.dx,
 				radar_f90.nodata])
-		
+
 	#lee Z y ref
-	def read_bin(self,path):	
+	def read_bin(self,path):
 		'Descripcion: Lee los archivos del radar de reflectividad y los \n'\
 		'convierte en Z, en el momento en que lee la imagen, esta \n'\
 		'funcion asigna parametros al modulo radar \n'\
@@ -198,18 +198,18 @@ class radar_process:
 		'Ejemplo\n'\
 		'----------\n'\
 		'Z,ref=read_bin(path).\n'\
-		
+
 		f = open(path, "r")
 		a = np.fromfile(f, dtype = np.uint8)
 		f.close()
 		reflectividad = (0.5*a)-32.0
-		miss_val = (np.where(reflectividad == 95.5))[0]      
+		miss_val = (np.where(reflectividad == 95.5))[0]
 		if (len(miss_val) != 0):
 			reflectividad[miss_val] = -999.0
 		try:
 		    ref = np.reshape(reflectividad,(1728,1728))
 		except BaseException:
-		    print "Binario defectuoso"
+		    print ("Binario defectuoso")
 		ref[ref==-999]=0.0
 		ref=np.flipud(ref)
 		ref[ref<5]=0
@@ -217,7 +217,7 @@ class radar_process:
 		Z[ref==-999]=-999
 		self.Z=Z; self.ref=ref
 	def read_netcdf(self,path):
-		fid=Dataset(path,'r')		
+		fid=Dataset(path,'r')
 		ref=fid.variables['DBZ_H'][0][0]
 		ref[ref<5]=0
 		Z = 10.**(ref/10.)
@@ -229,7 +229,7 @@ class radar_process:
 		self.Z=Z; self.ref=ref
 	#Obtiene el binario
 	def detect_clouds(self,k=np.array([[-1,-2,-1],[0,0,0],[1,2,1]]),
-		umbral=40):		
+		umbral=40):
 		'Descripcion: Obtiene los bordes de una imagen entregada  \n'\
 		'puede retornar los bordes y entregar la imagen rellenada \n'\
 		'\n'\
@@ -248,7 +248,7 @@ class radar_process:
 		'Ejemplo\n'\
 		'----------\n'\
 		'borders,binario=detect_clouds(Z).\n'\
-		
+
 		#Obtiene el gradiente, y el binario
 		gradiente=radar_f90.detect_clouds(self.Z,k,k.T,radar_f90.ncols,radar_f90.nrows)
 		bordes=np.zeros(gradiente.shape)
@@ -257,8 +257,8 @@ class radar_process:
 		binario=nd.binary_fill_holes(bordes)*1
 		#Retorna lo obtenido
 		self.borders=bordes
-		self.binario=binario		
-	#Clasifica el binario	
+		self.binario=binario
+	#Clasifica el binario
 	def classify(self,umbral=100,bordes='yes'):
 		'\n'\
 		'Descripcion: Limpia la imagen binaria de de acuerdo al \n'\
@@ -279,7 +279,7 @@ class radar_process:
 		'Ejemplo\n'\
 		'----------\n'\
 		'.\n'\
-	
+
 		#clasifica
 		classified,npixels,nelem=radar_f90.classify_binary(self.binario,
 			radar_f90.ncols,radar_f90.nrows)
@@ -326,7 +326,7 @@ class radar_process:
 		'Ejemplo\n'\
 		'----------\n'\
 		'MaxL,DL=find_lenght(binaria).\n'\
-			
+
 		#Saca longitudes de todas las nubes
 		Distlenght,Maxlenght = radar_f90.objects_lenght(self.border_elem,
 			self.border_cant,radar_f90.ncols,radar_f90.nrows,
@@ -352,7 +352,7 @@ class radar_process:
 		'Ejemplo\n'\
 		'----------\n'\
 		'A,P,xy=Basics_Geometry(binImage).\n'\
-		
+
 		#calcula area
 		self.area=self.cant_elem*radar_f90.dxp**2/1e6
 		#calcula centro de masa de cada elemento
@@ -365,9 +365,9 @@ class radar_process:
 				Y=radar_f90.yll+radar_f90.dx*((radar_f90.nrows-Y)+0.5)
 			self.centroMasa.append([X,Y])
 		self.centroMasa=np.array(self.centroMasa).T
-		#Calcula perimetro como una aproximacion a 1.8 veces la cantidad de 
-		#recuadros que conforman un borde		
-		self.perim=self.border_cant*radar_f90.dxp*1.8/1e6		
+		#Calcula perimetro como una aproximacion a 1.8 veces la cantidad de
+		#recuadros que conforman un borde
+		self.perim=self.border_cant*radar_f90.dxp*1.8/1e6
 	#Dimension fractal plana
 	def Fractal_Dimension_Plain(self):
 		'\n'\
@@ -386,11 +386,11 @@ class radar_process:
 		'Ejemplo\n'\
 		'----------\n'\
 		'FD_plana=Fractal_Dimension_Plain(tam).\n'\
-				
+
 		if radar_f90.dxp<>0.0:
 			return np.log(self.cant_elem)/np.log(radar_f90.dxp)
 		else:
-			print 'Error: radar.dxp=0.0'
+			print ('Error: radar.dxp=0.0')
 	#Dimension fractal superficie
 	def Fractal_Dimension_Surface(self,imageIn,ObjectList,sigma=0.0,k=12,a=1):
 		'\n'\
@@ -421,9 +421,9 @@ class radar_process:
 		self.fractal = radar_f90.fractal3d(imageIn,ObjectList,k,sigma, a,
 			radar_f90.ncols,
 			radar_f90.nrows,
-			self.elements.shape[1])		
-	#Pendiente con respecto a los vecinos 
-	def slope_arc(self):	
+			self.elements.shape[1])
+	#Pendiente con respecto a los vecinos
+	def slope_arc(self):
 		'\n'\
 		'Descripcion: Calcula la pendiente en cada celda como si \n'\
 		'	se tratara de un DEM\n'\
@@ -439,7 +439,7 @@ class radar_process:
 		'Ejemplo\n'\
 		'----------\n'\
 		'.\n'\
-	
+
 		return radar_f90.arc_slope(self.Z,radar_f90.ncols,radar_f90.nrows)
 	#Obtiene media y desbviacion de una variable
 	def var2mean(self,RasterValues):
@@ -461,7 +461,7 @@ class radar_process:
 		'Ejemplo\n'\
 		'----------\n'\
 		'.\n'\
-		
+
 		meanvar,stdVar = radar_f90.var2mean(RasterValues,
 			self.elements,self.elements[0,-1],
 			radar_f90.ncols,
@@ -512,12 +512,12 @@ class radar_process:
 			metNum = 3
 		elif metodo == 'siriluk':
 			metNum = 2
-		#Invoca la funcion de fortran 
+		#Invoca la funcion de fortran
 		peaks,self.ConvStra = radar_f90.steiner_find_peaks(self.ref,
 			umbral,radio,metNum,ZminSiriluk,a_yuter,b_yuter,
 			int(self.ref.shape[0]), int(self.ref.shape[1]))
-	
-	def save_rain_class(self, ruta, ExtraVar = None, ArrayVar1 = None, 
+
+	def save_rain_class(self, ruta, ExtraVar = None, ArrayVar1 = None,
                     ArrayVar2=None):
 		gr = Dataset(ruta,'w',format='NETCDF4')
 		'Descripcion: Guarda datos de radar procesados\n'\
@@ -540,7 +540,7 @@ class radar_process:
                     'xll': RadProp[2],
                     'yll': RadProp[3],
                     'dx': RadProp[4]}
-                #Establece tamano de las variables 
+                #Establece tamano de las variables
 		DimNcol = gr.createDimension('ncols',self.ConvStra.shape[0])
 		DimNfil = gr.createDimension('nrows',self.ConvStra.shape[1])
                 #variables del arrayVar
@@ -569,7 +569,7 @@ class radar_process:
 		ppt = np.copy(self.ppt['baja']) * 1000
 		ppt = ppt.astype(float)
                 ClasRainLow[:] = ppt
-		#Extra veriables 
+		#Extra veriables
                 if type(ExtraVar) is dict:
                     for k in ExtraVar.keys():
                         Var = gr.createVariable(k,ExtraVar[k]['type'],('ncols','nrows'),zlib=True)
@@ -578,16 +578,16 @@ class radar_process:
                 if type(ArrayVar1) is dict:
                     for k in ArrayVar1.keys():
                         var = gr.createVariable(k,ArrayVar1[k]['type'],('narray1',),zlib=True)
-                        var[:] = ArrayVar1[k]['Data'] 
+                        var[:] = ArrayVar1[k]['Data']
                 if type(ArrayVar2) is dict:
                     for k in ArrayVar2.keys():
                         var = gr.createVariable(k,ArrayVar2[k]['type'],('narray2',),zlib=True)
                         var[:] = ArrayVar2[k]['Data']
-                #Cierra el archivo 
+                #Cierra el archivo
 		gr.setncatts(Dict)
 		gr.close()
-				
-	# Genera kernels circulares 
+
+	# Genera kernels circulares
 	def CircKernel(self,radio):
 		#Centro del kernel y cantidad de datos
 		a, b = radio, radio
@@ -603,44 +603,44 @@ class radar_process:
 	def DBZ2Rain (self,path=Path):
 		str_disdro = '77'
 		ajuste_multicapaall = __open_pklfiles__(path)
-		
+
 		try:
 			aa = len(self.ref)
 			ref2 = np.array(self.ref)
 		except:
 			ref2 = np.array([self.ref])
-		
+
 		dbz = ref2
 		trunc_dbz = np.copy(dbz)
 		trunc_dbz[trunc_dbz >= 40] = 40.0
-		
+
 		## Se hace el ajuste para la reflectividad horizontak
-		
+
 		trunc_dbz2 = np.copy(dbz)
-		trunc = 55. 
-		
+		trunc = 55.
+
 		c1_all = (1/ajuste_multicapaall['capa1']['mc1'])*trunc_dbz2 - (ajuste_multicapaall['capa1']['bc1']/ajuste_multicapaall['capa1']['mc1'])
-		
+
 		if trunc is not None:
-			c1_all[c1_all >= trunc] = trunc       
+			c1_all[c1_all >= trunc] = trunc
 		c2_all = ((10**(c1_all/10.0))/ajuste_multicapaall['capa2']['bc2'])**(1.0/(ajuste_multicapaall['capa2']['mc2']))
-		
+
 		self.ppt = {}
 		for name, kmin, kmax in zip(['media','baja','alta'],['mc3','Emin_m','Emax_m'],['bc3','Emax_m','Emax_b']):
-			#Media		
+			#Media
 			c3_all = (ajuste_multicapaall['capa3'][kmin]*c2_all + ajuste_multicapaall['capa3'][kmax])
 			c3_all[c1_all <= 5.0] = 0.0
 			mask_ajust = np.isnan(c3_all)
-			c3_all[mask_ajust == True] = 0 
-			c3_all[c3_all < 0] = 0		
+			c3_all[mask_ajust == True] = 0
+			c3_all[c3_all < 0] = 0
 			## Obtiene las variables de la lluvia
 			self.ppt.update({name:c3_all})
-	
+
 class draw_func:
 	def __init__(self):
 		pass
-	
-	#Hace un plot elegante de la imagen de radar	
+
+	#Hace un plot elegante de la imagen de radar
 	def plot_radar_elegant(self,imageIn,ruta=None,figsize=(12,12),extra_lat=-0.2,
 		extra_long=-0.2,lines_spaces=0.4,mask_value=0.0,xy=None,
 		xyColor='red',colorbar=True, texto=None, **kwargs):
@@ -653,7 +653,7 @@ class draw_func:
 		'imageIn : Imagen con valores o binaria del radar\n'\
 		'ruta : si es especificada guarda la imagen.\n'\
 		'figsize : Tamano de la figura.\n'\
-		
+
 		'\n'\
 		'Retornos\n'\
 		'----------\n'\
@@ -662,7 +662,7 @@ class draw_func:
 		'Ejemplo\n'\
 		'----------\n'\
 		'.\n'\
-			
+
 		#Obtiene las latitudes y longitudes
 		longs=np.array([radar_f90.xll+(i+0.5)*radar_f90.dx for i in range(radar_f90.ncols)])
 		lats=np.array([radar_f90.yll+(i+0.5)*radar_f90.dx for i in range(radar_f90.nrows)])
@@ -670,7 +670,7 @@ class draw_func:
 		Y=Y[::-1]
 		#Cambia el tamano de la figura si tiene que hacerlo
 		if figsize<>None:
-			fig=pl.figure(figsize=figsize)		
+			fig=pl.figure(figsize=figsize)
 		#Genera el lugar de ploteo con el Basemap
 		m = Basemap(projection='merc',
 			llcrnrlat=lats.min()-extra_lat,
@@ -688,7 +688,7 @@ class draw_func:
 			linewidth=0.1)
 		m.drawmeridians(np.arange(longs.min(),
 			longs.max(),lines_spaces),
-			labels=[0,0,1,0], 
+			labels=[0,0,1,0],
 			fmt="%.2f",
 			yoffset=0.1,
 			linewidth=0.1)
@@ -700,10 +700,10 @@ class draw_func:
 		#cs=m.contourf(demX, demY, imageIn, 100, **kwargs)
 		cs = m.pcolormesh(demX,demY, imageIn, **kwargs)
 		if colorbar:
-			cbar = m.colorbar(cs,location='bottom',pad="5%")	
-		#dibuja los circulos		
+			cbar = m.colorbar(cs,location='bottom',pad="5%")
+		#dibuja los circulos
 		XY = []
-		for i in [30,60,90,120,250]:			
+		for i in [30,60,90,120,250]:
 			x,y = self.draw_circle(m,-75.5276,6.1937,i,c='k',lw=0.5)
 			XY.append([x,y])
 		#Si hay coordenadas de algo las dibuja
@@ -719,7 +719,7 @@ class draw_func:
 			pl.savefig(ruta,bbox_inches='tight')
 		pl.show()
 		#return XY
-		
+
 	def draw_circle(self,m, centerlon, centerlat, radius, *args, **kwargs):
 	    glon1 = centerlon
 	    glat1 = centerlat
@@ -735,7 +735,7 @@ class draw_func:
 	    Xn,Yn = m(X,Y)
 	    pl.plot(Xn,Yn,**kwargs)
 	    return X,Y
-	
+
 	def shoot(self,lon, lat, azimuth, maxdist=None):
 	    """Shooter Function
 	    Original javascript on http://williams.best.vwh.net/gccalc.htm
@@ -745,11 +745,11 @@ class draw_func:
 	    glon1 = lon * np.pi / 180.
 	    s = maxdist / 1.852
 	    faz = azimuth * np.pi / 180.
-	 
+
 	    EPS= 0.00000000005
 	    if ((np.abs(np.cos(glat1))<EPS) and not (np.abs(np.sin(faz))<EPS)):
 	        alert("Only N-S courses are meaningful, starting at a pole!")
-	 
+
 	    a=6378.13/1.852
 	    f=1/298.257223563
 	    r = 1 - f
@@ -760,7 +760,7 @@ class draw_func:
 	        b=0.
 	    else:
 	        b=2. * np.arctan2 (tu, cf)
-	 
+
 	    cu = 1. / np.sqrt(1 + tu * tu)
 	    su = tu * cu
 	    sa = cu * sf
@@ -774,7 +774,7 @@ class draw_func:
 	    y = tu
 	    c = y + 1
 	    while (np.abs (y - c) > EPS):
-	 
+
 	        sy = np.sin(y)
 	        cy = np.cos(y)
 	        cz = np.cos(b + y)
@@ -784,7 +784,7 @@ class draw_func:
 	        y = e + e - 1.
 	        y = (((sy * sy * 4. - 3.) * y * cz * d / 6. + x) *
 	              d / 4. - cz) * sy * d + tu
-	 
+
 	    b = cu * cy * cf - su * sy
 	    c = r * np.sqrt(sa * sa + b * b)
 	    d = su * cy + cu * sy * cf
@@ -793,13 +793,12 @@ class draw_func:
 	    x = np.arctan2(sy * sf, c)
 	    c = ((-3. * c2a + 4.) * f + 4.) * c2a * f / 16.
 	    d = ((e * cy * c + cz) * sy * c + y) * sa
-	    glon2 = ((glon1 + x - (1. - c) * d * f + np.pi) % (2*np.pi)) - np.pi    
-	 
+	    glon2 = ((glon1 + x - (1. - c) * d * f + np.pi) % (2*np.pi)) - np.pi
+
 	    baz = (np.arctan2(sa, b) + np.pi) % (2 * np.pi)
-	 
+
 	    glon2 *= 180./np.pi
 	    glat2 *= 180./np.pi
 	    baz *= 180./np.pi
-	 
+
 	    return (glon2, glat2, baz)
-	
