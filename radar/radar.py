@@ -10,16 +10,30 @@ import pylab as pl
 import scipy.ndimage as nd
 from netCDF4 import Dataset
 import pickle
+import os
 
-Path = __file__
-Path = Path[:-9]+'ajuste_multicapaall_77.pkl'
 RadProp = []
 
-def __open_pklfiles__(path_pkldata):
-    open_pkl = open(path_pkldata, 'rb')
-    data = pickle.load(open_pkl)
-    open_pkl.close()
-    return data
+PARAMETERS = 	{	'capa1': {	'Emax_b': 8.1890633385713176,
+				  				'Emax_m': 0.89488154923995877,
+			     				'Emin_b': -2.7671567419494605,
+								'Emin_m': 0.83191288812970476,
+								'bc1'	: 2.7109532983109315,
+								'mc1'	: 0.86339721868483177},
+
+					'capa2': {	'Emax_b': 170.07918357147915,
+								'Emax_m': 1.4396612322392863,
+								'Emin_b': 468.71974124345508,
+								'Emin_m': 1.4292102098927442,
+								'bc2'	: 259.00894239129173,
+								'mc2'	: 1.436206224560685},
+
+					'capa3': {	'Emax_b': 3.7020439253726658,
+								'Emax_m': 1.5924382636991348,
+								'Emin_b': 2.0190168854006192,
+								'Emin_m': 0.98311459938759016,
+								'bc3'	: 2.8605304053866396,
+								'mc3'	: 1.2877764315433626}}
 
 class image_process:
 	def __init__(self):
@@ -168,7 +182,7 @@ class radar_process:
 		radar_f90.nrows=1728
 
 		#si se pasan argumentos se cambia
-		for key, value in kwargs.iteritems():      # styles is a regular dictionary
+		for key, value in kwargs.items():      # styles is a regular dictionary
 			setattr(radar_f90, key, value)
 
 		#Copia las propiedades en la lista de propiedades variable
@@ -598,10 +612,9 @@ class radar_process:
 		array[mask] = 1
 		return array
 	# Convierte reflectividad a lluvia por Sepulveda, 2015
-	def DBZ2Rain (self,path=Path):
+	def DBZ2Rain (self,**kwargs):
 		str_disdro = '77'
-		ajuste_multicapaall = __open_pklfiles__(path)
-
+		ajuste_multicapaall = kwargs.get('parameters',PARAMETERS)
 		try:
 			aa = len(self.ref)
 			ref2 = np.array(self.ref)
