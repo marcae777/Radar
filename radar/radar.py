@@ -583,10 +583,11 @@ class radar_process:
 		ppt = ppt.astype(float)
 		ClasRainLow[:] = ppt
 		#Extra veriables
+		print(type(ExtraVar))
 		if type(ExtraVar) is dict:
 			for k in ExtraVar.keys():
 				Var = gr.createVariable(k,ExtraVar[k]['type'],('ncols','nrows'),zlib=True)
-		Var[:] = ExtraVar[k]['Data']
+				Var[:] = ExtraVar[k]['Data']
 		if type(ArrayVar1) is dict:
 			for k in ArrayVar1.keys():
 				var = gr.createVariable(k,ArrayVar1[k]['type'],('narray1',),zlib=True)
